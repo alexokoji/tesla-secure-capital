@@ -15,7 +15,8 @@ export function SiteHeader() {
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <a href="/#plans" className="hover:text-foreground transition-colors">Plans</a>
-          <a href="/#market" className="hover:text-foreground transition-colors">Market</a>
+          <Link to="/trading" className="hover:text-foreground transition-colors">Trading</Link>
+          <a href="/#faq" className="hover:text-foreground transition-colors">FAQ</a>
           {user && <Link to="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>}
           {isAdmin && <Link to="/admin" className="hover:text-foreground transition-colors">Admin</Link>}
         </nav>

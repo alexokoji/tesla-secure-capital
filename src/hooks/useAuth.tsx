@@ -13,6 +13,9 @@ type Profile = {
   total_withdrawal: number;
   total_profit: number;
   status: string;
+  referral_code?: string | null;
+  referrer_id?: string | null;
+  kyc_status?: string | null;
 };
 
 type AuthContextValue = {

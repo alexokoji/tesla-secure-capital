@@ -10,7 +10,10 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-const searchSchema = z.object({ mode: z.enum(["login", "signup"]).optional() });
+const searchSchema = z.object({
+  mode: z.enum(["login", "signup"]).optional(),
+  ref: z.string().optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -19,7 +22,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { mode } = useSearch({ from: "/auth" });
+  const { mode, ref } = useSearch({ from: "/auth" });
   const { user } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">(mode ?? "login");
@@ -52,7 +55,7 @@ function AuthPage() {
       password: String(fd.get("password")),
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: String(fd.get("full_name")) },
+        data: { full_name: String(fd.get("full_name")), referral_code: ref ?? null },
       },
     });
     setLoading(false);
@@ -83,6 +86,7 @@ function AuthPage() {
               <div><Label htmlFor="sn">Full name</Label><Input id="sn" name="full_name" required /></div>
               <div><Label htmlFor="se">Email</Label><Input id="se" name="email" type="email" required /></div>
               <div><Label htmlFor="sp">Password</Label><Input id="sp" name="password" type="password" required minLength={8} /></div>
+              {ref && <p className="text-xs text-primary">Referred by code: {ref}</p>}
               <Button type="submit" className="w-full" disabled={loading}>{loading ? "..." : "Create Account"}</Button>
               <p className="text-xs text-muted-foreground text-center">First account becomes the admin.</p>
             </form>
