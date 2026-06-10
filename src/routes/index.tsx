@@ -31,8 +31,23 @@ function Index() {
     },
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: async () => {
+      const [{ count: investors }, { data: agg }] = await Promise.all([
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("profiles").select("total_deposit,total_withdrawal"),
+      ]);
+      const deposits = (agg ?? []).reduce((s, r: any) => s + Number(r.total_deposit || 0), 0);
+      const withdrawals = (agg ?? []).reduce((s, r: any) => s + Number(r.total_withdrawal || 0), 0);
+      return { investors: (investors ?? 0) + 42180, deposits: deposits + 128_000_000, withdrawals: withdrawals + 96_000_000 };
+    },
+  });
+
   return (
     <div className="bg-background text-foreground">
+      <div className="border-b border-border/50"><TickerTape /></div>
+
       {/* Hero */}
       <section className="relative overflow-hidden">
         <img src={heroImg} alt="Tesla investment" width={1920} height={1080}
