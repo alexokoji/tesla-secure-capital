@@ -88,6 +88,72 @@ export type Database = {
           },
         ]
       }
+      kyc_submissions: {
+        Row: {
+          created_at: string
+          document_path: string
+          document_type: string
+          full_name: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_path: string
+          document_type: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_path?: string
+          document_type?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          broadcast: boolean
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          broadcast?: boolean
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          broadcast?: boolean
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           balance: number
@@ -96,7 +162,10 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          kyc_status: string
           phone: string | null
+          referral_code: string | null
+          referrer_id: string | null
           status: string
           total_deposit: number
           total_profit: number
@@ -110,7 +179,10 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          kyc_status?: string
           phone?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
           status?: string
           total_deposit?: number
           total_profit?: number
@@ -124,7 +196,10 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          kyc_status?: string
           phone?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
           status?: string
           total_deposit?: number
           total_profit?: number
@@ -132,6 +207,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_admin: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -183,6 +338,27 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watchlist: {
+        Row: {
+          created_at: string
+          id: string
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          symbol?: string
           user_id?: string
         }
         Relationships: []
