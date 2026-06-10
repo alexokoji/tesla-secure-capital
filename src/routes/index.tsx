@@ -1,29 +1,141 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { TradingViewWidget } from "@/components/TradingViewWidget";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, TrendingUp, Lock, Zap, Award, BarChart3 } from "lucide-react";
+import heroImg from "@/assets/hero-tesla.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Tesla Secure Capital — Invest in the Future of Energy" },
+      { name: "description", content: "Earn daily ROI investing in Tesla-backed portfolios. Live TSLA market data, secure deposits, and instant withdrawals." },
+      { property: "og:title", content: "Tesla Secure Capital" },
+      { property: "og:description", content: "Earn daily ROI investing in Tesla-backed portfolios." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { data: plans } = useQuery({
+    queryKey: ["plans"],
+    queryFn: async () => {
+      const { data } = await supabase.from("investment_plans").select("*").eq("is_active", true).order("min_amount");
+      return data ?? [];
+    },
+  });
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="bg-background text-foreground">
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <img src={heroImg} alt="Tesla investment" width={1920} height={1080}
+          className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
+        <div className="relative container mx-auto px-4 py-28 md:py-40">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-medium mb-6">
+              <Zap className="h-3 w-3" /> Powered by Tesla Energy
+            </span>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
+              Invest in the <span className="text-primary">future</span> of energy.
+            </h1>
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl">
+              Tesla Secure Capital offers verified high-yield investment plans backed by Tesla market performance. Earn up to <span className="text-primary font-semibold">7.5% daily ROI</span> with secure deposits and instant withdrawals.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/auth" search={{ mode: "signup" } as never}>
+                <Button size="lg" className="shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
+                  Start Investing
+                </Button>
+              </Link>
+              <a href="#plans"><Button size="lg" variant="outline">View Plans</Button></a>
+            </div>
+            <div className="mt-12 grid grid-cols-3 gap-6 max-w-xl">
+              <Stat label="Active Investors" value="42,180+" />
+              <Stat label="Paid Out" value="$128M" />
+              <Stat label="Avg. Daily ROI" value="4.8%" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Market */}
+      <section id="market" className="container mx-auto px-4 py-20">
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold">Live TSLA Market</h2>
+            <p className="text-muted-foreground mt-2">Real-time Tesla stock chart powered by TradingView.</p>
+          </div>
+          <BarChart3 className="h-10 w-10 text-primary" />
+        </div>
+        <TradingViewWidget symbol="NASDAQ:TSLA" />
+      </section>
+
+      {/* Plans */}
+      <section id="plans" className="container mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">Investment Plans</h2>
+          <p className="text-muted-foreground mt-2">Choose a plan that matches your goals. Profits compound daily.</p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {plans?.map((p, i) => (
+            <Card key={p.id} className={`p-6 flex flex-col ${i === 2 ? "border-primary shadow-lg" : ""}`}>
+              <div className="text-sm text-muted-foreground uppercase tracking-wider">{p.name}</div>
+              <div className="mt-3 text-4xl font-bold text-primary">{Number(p.daily_roi)}%</div>
+              <div className="text-sm text-muted-foreground">daily for {p.duration_days} days</div>
+              <div className="mt-6 space-y-2 text-sm flex-1">
+                <div className="flex justify-between"><span className="text-muted-foreground">Min</span><span>${Number(p.min_amount).toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Max</span><span>${Number(p.max_amount).toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Total ROI</span><span className="text-primary">{(Number(p.daily_roi) * p.duration_days).toFixed(0)}%</span></div>
+              </div>
+              <Link to="/auth" search={{ mode: "signup" } as never} className="mt-6">
+                <Button className="w-full" variant={i === 2 ? "default" : "outline"}>Invest Now</Button>
+              </Link>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="grid md:grid-cols-3 gap-6">
+          <Feature icon={Shield} title="Bank-grade Security" desc="256-bit encryption, segregated cold wallets, and multi-sig withdrawals." />
+          <Feature icon={TrendingUp} title="Verified Returns" desc="Profits tracked daily and credited to your dashboard automatically." />
+          <Feature icon={Lock} title="Instant Withdrawals" desc="Request a withdrawal anytime — processed within 24 hours." />
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/60 mt-10">
+        <div className="container mx-auto px-4 py-10 text-sm text-muted-foreground flex flex-wrap justify-between gap-4">
+          <div>© {new Date().getFullYear()} Tesla Secure Capital. All rights reserved.</div>
+          <div className="flex items-center gap-2"><Award className="h-4 w-4 text-primary" /> Trusted by 42,000+ investors worldwide.</div>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-2xl md:text-3xl font-bold text-primary">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    </div>
+  );
+}
+
+function Feature({ icon: Icon, title, desc }: { icon: typeof Shield; title: string; desc: string }) {
+  return (
+    <Card className="p-6">
+      <Icon className="h-8 w-8 text-primary mb-3" />
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <p className="text-sm text-muted-foreground mt-2">{desc}</p>
+    </Card>
   );
 }
