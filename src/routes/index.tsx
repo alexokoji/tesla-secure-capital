@@ -73,11 +73,21 @@ function Index() {
               <a href="#plans"><Button size="lg" variant="outline">View Plans</Button></a>
             </div>
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-xl">
-              <Stat label="Active Investors" value="42,180+" />
-              <Stat label="Paid Out" value="$128M" />
+              <Stat label="Active Investors" value={`${(stats?.investors ?? 42180).toLocaleString()}+`} />
+              <Stat label="Total Deposits" value={`$${Math.round((stats?.deposits ?? 128_000_000) / 1_000_000)}M`} />
               <Stat label="Avg. Daily ROI" value="4.8%" />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Platform stats */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Users} label="Total Investors" value={`${(stats?.investors ?? 0).toLocaleString()}`} />
+          <StatCard icon={TrendingUp} label="Total Deposits" value={`$${(stats?.deposits ?? 0).toLocaleString()}`} />
+          <StatCard icon={Award} label="Total Withdrawals" value={`$${(stats?.withdrawals ?? 0).toLocaleString()}`} />
+          <StatCard icon={Zap} label="Active Plans" value={`${plans?.length ?? 0}`} />
         </div>
       </section>
 
