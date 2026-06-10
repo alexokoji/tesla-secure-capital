@@ -166,3 +166,15 @@ function Feature({ icon: Icon, title, desc }: { icon: typeof Shield; title: stri
     </Card>
   );
 }
+
+function StatCard({ icon: Icon, label, value }: { icon: typeof Shield; label: string; value: string }) {
+  return (
+    <Card className="p-5 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <div className="mt-2 text-2xl font-bold">{value}</div>
+    </Card>
+  );
+}
