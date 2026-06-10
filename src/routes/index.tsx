@@ -3,9 +3,11 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TradingViewWidget } from "@/components/TradingViewWidget";
+import { TickerTape } from "@/components/TickerTape";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, TrendingUp, Lock, Zap, Award, BarChart3 } from "lucide-react";
+import { Shield, TrendingUp, Lock, Zap, Award, BarChart3, Users, Gift, Mail, Star } from "lucide-react";
 import heroImg from "@/assets/hero-tesla.jpg";
 
 export const Route = createFileRoute("/")({
