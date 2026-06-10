@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +63,9 @@ function Dashboard() {
         <TxDialog type="deposit" onDone={() => { refetchTx(); refreshProfile(); }} />
         <TxDialog type="withdrawal" onDone={() => { refetchTx(); refreshProfile(); }} maxAmount={profile.balance} />
         <InvestDialog plans={plans ?? []} balance={profile.balance} onDone={() => { refetchTx(); refreshProfile(); }} />
+        <Link to="/profile"><Button variant="ghost">Profile</Button></Link>
+        <Link to="/kyc"><Button variant="ghost">KYC</Button></Link>
+        <Link to="/referrals"><Button variant="ghost">Referrals</Button></Link>
       </div>
 
       <Card className="p-6">
