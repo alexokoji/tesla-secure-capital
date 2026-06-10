@@ -145,8 +145,12 @@ function TxTab() {
   const { data: txs, refetch } = useQuery({
     queryKey: ["admin-tx"],
     queryFn: async () => {
-      const { data } = await supabase.from("transactions").select("*, profiles(email, full_name)").order("created_at", { ascending: false }).limit(100);
-      return data ?? [];
+      const [{ data: t }, { data: p }] = await Promise.all([
+        supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("profiles").select("id, email, full_name"),
+      ]);
+      const map = new Map((p ?? []).map((x) => [x.id, x]));
+      return (t ?? []).map((tx) => ({ ...tx, profile: map.get(tx.user_id) }));
     },
   });
 
@@ -190,8 +194,8 @@ function TxTab() {
             {txs?.map((t: any) => (
               <tr key={t.id} className="border-b border-border/40">
                 <td className="py-2">
-                  <div className="font-medium">{t.profiles?.full_name || "—"}</div>
-                  <div className="text-xs text-muted-foreground">{t.profiles?.email}</div>
+                  <div className="font-medium">{t.profile?.full_name || "—"}</div>
+                  <div className="text-xs text-muted-foreground">{t.profile?.email}</div>
                 </td>
                 <td className="capitalize">{t.type}</td>
                 <td className="font-semibold">${Number(t.amount).toLocaleString()}</td>
