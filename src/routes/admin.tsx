@@ -225,3 +225,182 @@ function TxTab() {
     </Card>
   );
 }
+function KycTab() {
+  const { data: subs, refetch } = useQuery({
+    queryKey: ["admin-kyc"],
+    queryFn: async () => {
+      const [{ data: k }, { data: p }] = await Promise.all([
+        supabase.from("kyc_submissions").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, email, full_name"),
+      ]);
+      const map = new Map((p ?? []).map((x) => [x.id, x]));
+      return (k ?? []).map((s) => ({ ...s, profile: map.get(s.user_id) }));
+    },
+  });
+
+  const decide = async (s: any, status: "approved" | "rejected") => {
+    await supabase.from("kyc_submissions").update({ status, updated_at: new Date().toISOString() }).eq("id", s.id);
+    await supabase.from("profiles").update({ kyc_status: status === "approved" ? "verified" : "rejected" }).eq("id", s.user_id);
+    toast.success(`KYC ${status}`);
+    refetch();
+  };
+
+  const view = async (path: string) => {
+    const { data } = await supabase.storage.from("kyc-docs").createSignedUrl(path, 300);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+  return (
+    <Card className="p-6 mt-4">
+      {!subs?.length ? <p className="text-sm text-muted-foreground">No KYC submissions.</p> : (
+        <div className="space-y-3">
+          {subs.map((s: any) => (
+            <div key={s.id} className="flex justify-between items-center border-b border-border/40 pb-3">
+              <div>
+                <div className="font-medium">{s.profile?.full_name || s.full_name}</div>
+                <div className="text-xs text-muted-foreground">{s.profile?.email} · {s.document_type} · {new Date(s.created_at).toLocaleString()}</div>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Badge variant={s.status === "approved" ? "default" : s.status === "rejected" ? "destructive" : "secondary"}>{s.status}</Badge>
+                <Button size="sm" variant="outline" onClick={() => view(s.document_path)}>View</Button>
+                {s.status === "pending" && (
+                  <>
+                    <Button size="sm" onClick={() => decide(s, "approved")}>Approve</Button>
+                    <Button size="sm" variant="outline" onClick={() => decide(s, "rejected")}>Reject</Button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function NotifTab() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [target, setTarget] = useState("broadcast");
+  const [userId, setUserId] = useState("");
+
+  const { data: users } = useQuery({
+    queryKey: ["notif-users"],
+    queryFn: async () => (await supabase.from("profiles").select("id,email")).data ?? [],
+  });
+
+  const send = async () => {
+    if (!title.trim() || !body.trim()) return toast.error("Title and body required");
+    const payload: any = { title, body };
+    if (target === "broadcast") payload.broadcast = true;
+    else { payload.user_id = userId; payload.broadcast = false; }
+    const { error } = await supabase.from("notifications").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Notification sent");
+    setTitle(""); setBody("");
+  };
+
+  return (
+    <Card className="p-6 mt-4 space-y-4 max-w-2xl">
+      <div>
+        <Label>Send to</Label>
+        <Select value={target} onValueChange={setTarget}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="broadcast">All users (broadcast)</SelectItem>
+            <SelectItem value="specific">Specific user</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {target === "specific" && (
+        <div>
+          <Label>User</Label>
+          <Select value={userId} onValueChange={setUserId}>
+            <SelectTrigger><SelectValue placeholder="Pick a user" /></SelectTrigger>
+            <SelectContent>{users?.map((u: any) => <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      )}
+      <div><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+      <div><Label>Message</Label><Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} /></div>
+      <Button onClick={send}>Send notification</Button>
+    </Card>
+  );
+}
+
+function TicketsTab() {
+  const [active, setActive] = useState<string | null>(null);
+  const [reply, setReply] = useState("");
+  const { user } = useAuth();
+
+  const { data: tickets, refetch } = useQuery({
+    queryKey: ["admin-tickets"],
+    queryFn: async () => {
+      const [{ data: t }, { data: p }] = await Promise.all([
+        supabase.from("support_tickets").select("*").order("updated_at", { ascending: false }),
+        supabase.from("profiles").select("id,email,full_name"),
+      ]);
+      const map = new Map((p ?? []).map((x) => [x.id, x]));
+      return (t ?? []).map((tk) => ({ ...tk, profile: map.get(tk.user_id) }));
+    },
+  });
+
+  const { data: msgs, refetch: refetchMsgs } = useQuery({
+    queryKey: ["admin-ticket-msgs", active],
+    enabled: !!active,
+    queryFn: async () => (await supabase.from("ticket_messages").select("*").eq("ticket_id", active!).order("created_at")).data ?? [],
+  });
+
+  const send = async () => {
+    if (!reply.trim() || !active) return;
+    await supabase.from("ticket_messages").insert({ ticket_id: active, sender_id: user!.id, is_admin: true, body: reply });
+    await supabase.from("support_tickets").update({ updated_at: new Date().toISOString() }).eq("id", active);
+    setReply(""); refetchMsgs();
+  };
+
+  const close = async (id: string) => {
+    await supabase.from("support_tickets").update({ status: "closed" }).eq("id", id);
+    refetch();
+  };
+
+  return (
+    <div className="grid lg:grid-cols-[320px_1fr] gap-4 mt-4">
+      <Card className="p-4">
+        <h3 className="font-semibold mb-2">All tickets</h3>
+        {!tickets?.length ? <p className="text-sm text-muted-foreground">No tickets.</p> : (
+          <ul className="space-y-1">
+            {tickets.map((t: any) => (
+              <li key={t.id}>
+                <button onClick={() => setActive(t.id)} className={`w-full text-left p-2 rounded text-sm ${active === t.id ? "bg-accent" : "hover:bg-accent/50"}`}>
+                  <div className="font-medium truncate">{t.subject}</div>
+                  <div className="text-xs text-muted-foreground">{t.profile?.email} · <Badge variant={t.status === "open" ? "default" : "secondary"} className="text-[10px]">{t.status}</Badge></div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card className="p-6 min-h-[500px] flex flex-col">
+        {!active ? <div className="m-auto text-muted-foreground text-sm">Select a ticket</div> : (
+          <>
+            <div className="flex justify-end mb-2"><Button size="sm" variant="outline" onClick={() => close(active)}>Close ticket</Button></div>
+            <div className="flex-1 space-y-3 overflow-y-auto">
+              {msgs?.map((m: any) => (
+                <div key={m.id} className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${m.is_admin ? "bg-primary text-primary-foreground" : "bg-accent"}`}>
+                    <div className="text-xs opacity-70 mb-1">{m.is_admin ? "Support" : "User"} · {new Date(m.created_at).toLocaleString()}</div>
+                    {m.body}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Input value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Reply..." />
+              <Button onClick={send}>Send</Button>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
+  );
+}
