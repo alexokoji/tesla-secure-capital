@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -35,9 +36,15 @@ function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="tx">Transactions</TabsTrigger>
+          <TabsTrigger value="kyc">KYC</TabsTrigger>
+          <TabsTrigger value="notif">Notifications</TabsTrigger>
+          <TabsTrigger value="tickets">Tickets</TabsTrigger>
         </TabsList>
         <TabsContent value="users"><UsersTab /></TabsContent>
         <TabsContent value="tx"><TxTab /></TabsContent>
+        <TabsContent value="kyc"><KycTab /></TabsContent>
+        <TabsContent value="notif"><NotifTab /></TabsContent>
+        <TabsContent value="tickets"><TicketsTab /></TabsContent>
       </Tabs>
     </div>
   );
