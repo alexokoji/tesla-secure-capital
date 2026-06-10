@@ -137,6 +137,75 @@ function Index() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold">Trusted by investors worldwide</h2>
+          <p className="text-muted-foreground mt-2">Real stories from real clients.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { name: "Marcus T.", role: "Investor · USA", quote: "Withdrew my first $12k in under 24 hours. The dashboard makes tracking ROI effortless." },
+            { name: "Aisha K.", role: "Investor · UAE", quote: "The VIP plan paid off — daily ROI hit my wallet on schedule, every single day." },
+            { name: "Liam P.", role: "Investor · UK", quote: "Smooth onboarding, KYC done in a day, support team responds within minutes." },
+          ].map((t) => (
+            <Card key={t.name} className="p-6">
+              <div className="flex gap-1 mb-3">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-primary text-primary" />)}</div>
+              <p className="text-sm leading-relaxed">"{t.quote}"</p>
+              <div className="mt-4 text-sm font-semibold">{t.name}</div>
+              <div className="text-xs text-muted-foreground">{t.role}</div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Referral */}
+      <section className="container mx-auto px-4 py-20">
+        <Card className="p-10 text-center border-primary/40" style={{ background: "var(--gradient-primary)" }}>
+          <Gift className="h-12 w-12 mx-auto mb-4 text-primary-foreground" />
+          <h2 className="text-3xl font-bold text-primary-foreground">Earn 10% on Every Referral</h2>
+          <p className="mt-3 text-primary-foreground/90 max-w-xl mx-auto">Share your unique referral link and earn lifetime commissions on every deposit your invitees make.</p>
+          <Link to="/auth" search={{ mode: "signup" } as never} className="inline-block mt-6">
+            <Button size="lg" variant="secondary">Get Your Referral Link</Button>
+          </Link>
+        </Card>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="container mx-auto px-4 py-20 max-w-3xl">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold">Frequently asked questions</h2>
+        </div>
+        <Accordion type="single" collapsible className="w-full">
+          {[
+            { q: "How do I start investing?", a: "Create an account, verify your email, deposit funds via crypto or bank transfer, then choose an investment plan that suits your goals." },
+            { q: "How long do withdrawals take?", a: "Withdrawal requests are reviewed and processed within 24 hours. Crypto withdrawals are typically faster than bank transfers." },
+            { q: "Is my investment safe?", a: "Yes. All funds are held in segregated cold wallets with multi-signature security and bank-grade 256-bit encryption." },
+            { q: "What is the minimum deposit?", a: "The minimum deposit depends on the plan you choose. Our Starter plan begins at just $100." },
+            { q: "Do you offer a referral program?", a: "Yes — earn 10% commission on every deposit from users you refer, paid for life." },
+            { q: "How is KYC handled?", a: "Submit a government-issued ID and proof of address from your dashboard. Most submissions are approved within 24 hours." },
+          ].map((f, i) => (
+            <AccordionItem key={i} value={`q${i}`}>
+              <AccordionTrigger>{f.q}</AccordionTrigger>
+              <AccordionContent>{f.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className="container mx-auto px-4 py-20">
+        <Card className="p-10 text-center">
+          <Mail className="h-10 w-10 mx-auto mb-4 text-primary" />
+          <h2 className="text-2xl font-bold">Need help? We're here 24/7.</h2>
+          <p className="text-muted-foreground mt-2">Reach our support team anytime, day or night.</p>
+          <a href="mailto:support@teslasecurecapital.com" className="inline-block mt-6">
+            <Button variant="outline">support@teslasecurecapital.com</Button>
+          </a>
+          <p className="text-xs text-muted-foreground mt-4">Already a user? <Link to="/support" className="text-primary hover:underline">Open a support ticket →</Link></p>
+        </Card>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border/60 mt-10">
         <div className="container mx-auto px-4 py-10 text-sm text-muted-foreground flex flex-wrap justify-between gap-4">
