@@ -22,6 +22,7 @@ import {
   Bell, Headphones, Link2, ShieldCheck, Crown, Activity, Zap, Trophy,
   Sparkles, Copy, Calculator, Newspaper, Bot, Languages, Repeat, ArrowLeftRight,
   QrCode, Gift, Star, Menu, LayoutDashboard, Users, LifeBuoy, FileCheck2, Upload,
+  Settings,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -794,6 +795,7 @@ const SIDEBAR_LINKS = [
 ];
 
 function SidebarBody({ onAction }: { onAction?: () => void }) {
+  const { isAdmin } = useAuth();
   return (
     <div className="flex h-full flex-col p-4 gap-2">
       <Link to="/dashboard" onClick={onAction} className="flex items-center gap-2 px-2 py-3 mb-2">
@@ -818,6 +820,17 @@ function SidebarBody({ onAction }: { onAction?: () => void }) {
           </Link>
         );
       })}
+
+      {isAdmin && (
+        <>
+          <div className="my-3 h-px bg-white/10" />
+          <p className="px-2 text-[10px] uppercase tracking-widest text-amber-400 mb-1">Admin</p>
+          <Link to="/admin" onClick={onAction}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-amber-400 hover:text-amber-300 hover:bg-white/5 transition-colors">
+            <Settings className="h-4 w-4" /> Admin Panel
+          </Link>
+        </>
+      )}
     </div>
   );
 }
