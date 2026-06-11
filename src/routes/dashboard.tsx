@@ -22,6 +22,7 @@ import {
   Bell, Headphones, Link2, ShieldCheck, Crown, Activity, Zap, Trophy,
   Sparkles, Copy, Calculator, Newspaper, Bot, Languages, Repeat, ArrowLeftRight,
   QrCode, Gift, Star, Menu, LayoutDashboard, Users, LifeBuoy, FileCheck2, Upload,
+  Settings,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
