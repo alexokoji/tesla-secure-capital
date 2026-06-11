@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { FloatingChatButton } from "@/components/FloatingChatButton";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
