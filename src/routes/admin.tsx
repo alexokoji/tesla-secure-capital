@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Tesla Secure Capital" }] }),
@@ -32,7 +32,10 @@ function AdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-10 space-y-6">
-      <h1 className="text-3xl font-bold">Admin Panel</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <RoiControls />
+      </div>
       <Tabs defaultValue="users">
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
@@ -49,6 +52,30 @@ function AdminPage() {
         <TabsContent value="notif"><NotifTab /></TabsContent>
         <TabsContent value="tickets"><TicketsTab /></TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function RoiControls() {
+  const [busy, setBusy] = useState(false);
+
+  const run = async (force: boolean) => {
+    setBusy(true);
+    // admin_run_roi isn't in the generated types yet; cast to call it.
+    const { error } = await (supabase.rpc as any)("admin_run_roi", { p_force: force });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(force ? "Forced +1 day ROI credited to active investments." : "ROI accrual run — any due payouts credited.");
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" onClick={() => run(false)} disabled={busy}>
+        <RefreshCw className="h-4 w-4 mr-2" /> Run ROI now
+      </Button>
+      <Button size="sm" onClick={() => run(true)} disabled={busy}>
+        Force +1 day (test)
+      </Button>
     </div>
   );
 }

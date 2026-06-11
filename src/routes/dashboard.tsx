@@ -76,7 +76,7 @@ function Particles() {
 }
 
 function Dashboard() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, loading, profileLoaded, profileError, refreshProfile, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,6 +109,33 @@ function Dashboard() {
     },
   });
 
+  const { data: referredDeposits } = useQuery({
+    queryKey: ["referral-earnings", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("total_deposit").eq("referrer_id", user!.id);
+      return (data ?? []).reduce((s: number, r: any) => s + Number(r.total_deposit || 0), 0);
+    },
+  });
+
+  // Profile failed to load (or doesn't exist) — don't spin forever; let the user recover.
+  if (user && profileLoaded && !profile) {
+    return (
+      <div className="container mx-auto max-w-md p-10 text-center">
+        <p className="text-lg font-semibold text-foreground">We couldn't load your portfolio</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {profileError ?? "Your profile could not be loaded. Please try again."}
+        </p>
+        <div className="mt-6 flex justify-center gap-2">
+          <Button onClick={() => refreshProfile()}>Retry</Button>
+          <Button variant="outline" onClick={() => { signOut().then(() => navigate({ to: "/auth" })); }}>
+            Sign out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!user || !profile) {
     return (
       <div className="container mx-auto p-10 text-center text-muted-foreground">
@@ -124,7 +151,7 @@ function Dashboard() {
   const activeInvested = (investments ?? [])
     .filter((i: any) => i.status === "active" || i.status === "approved")
     .reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
-  const referralEarnings = totalProfit * 0.08;
+  const referralEarnings = (referredDeposits ?? 0) * 0.1;
   const tradingPortfolio = balance * 0.62 + activeInvested * 0.35;
 
   const tier =
@@ -626,13 +653,29 @@ function ConverterWidget() {
 }
 
 function ReferralPanel({ profile }: any) {
-  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/auth?ref=${profile.referral_code || ""}`;
-  const leaders = [
-    { name: "Alex T.", earned: 12480 },
-    { name: "Priya S.", earned: 8920 },
-    { name: "Marco V.", earned: 6310 },
-    { name: "You", earned: 1240 },
-  ];
+  const { user } = useAuth();
+  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/auth?mode=signup&ref=${profile.referral_code || ""}`;
+
+  const { data: referred } = useQuery({
+    queryKey: ["dash-referrals", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, total_deposit")
+        .eq("referrer_id", user!.id);
+      return data ?? [];
+    },
+  });
+
+  const COMMISSION_RATE = 0.1;
+  const count = referred?.length ?? 0;
+  const commission = (referred ?? []).reduce((s: number, r: any) => s + Number(r.total_deposit || 0) * COMMISSION_RATE, 0);
+  const top = [...(referred ?? [])]
+    .map((r: any) => ({ name: r.full_name || r.email || "Referral", earned: Number(r.total_deposit || 0) * COMMISSION_RATE }))
+    .sort((a, b) => b.earned - a.earned)
+    .slice(0, 4);
+
   return (
     <div className="glass-card rounded-2xl p-5">
       <h3 className="font-semibold mb-3">Referral Program</h3>
@@ -643,20 +686,24 @@ function ReferralPanel({ profile }: any) {
         </Button>
       </div>
       <div className="grid grid-cols-3 gap-3 mt-4">
-        <div className="p-3 rounded-xl bg-white/5"><p className="text-[10px] text-muted-foreground">Referrals</p><p className="text-lg font-bold">12</p></div>
-        <div className="p-3 rounded-xl bg-white/5"><p className="text-[10px] text-muted-foreground">Commission</p><p className="text-lg font-bold neon-blue">$1,240</p></div>
+        <div className="p-3 rounded-xl bg-white/5"><p className="text-[10px] text-muted-foreground">Referrals</p><p className="text-lg font-bold">{count}</p></div>
+        <div className="p-3 rounded-xl bg-white/5"><p className="text-[10px] text-muted-foreground">Commission</p><p className="text-lg font-bold neon-blue">{fmtUSD(commission, 0)}</p></div>
         <div className="p-3 rounded-xl bg-white/5"><p className="text-[10px] text-muted-foreground">Rate</p><p className="text-lg font-bold">10%</p></div>
       </div>
       <div className="mt-4">
-        <p className="text-xs text-muted-foreground mb-2">Leaderboard</p>
-        <div className="space-y-1.5">
-          {leaders.map((l, i) => (
-            <div key={l.name} className={`flex items-center justify-between text-sm p-2 rounded-lg ${l.name === "You" ? "bg-[oklch(0.65_0.2_240)]/15 border border-[oklch(0.65_0.2_240)]/30" : "bg-white/5"}`}>
-              <span className="flex items-center gap-2"><span className="text-xs text-muted-foreground">#{i + 1}</span>{l.name}</span>
-              <span className="font-semibold tabular-nums">{fmtUSD(l.earned, 0)}</span>
-            </div>
-          ))}
-        </div>
+        <p className="text-xs text-muted-foreground mb-2">Top referrals</p>
+        {top.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No referrals yet — share your link to start earning.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {top.map((l, i) => (
+              <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg bg-white/5">
+                <span className="flex items-center gap-2"><span className="text-xs text-muted-foreground">#{i + 1}</span>{l.name}</span>
+                <span className="font-semibold tabular-nums">{fmtUSD(l.earned, 0)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

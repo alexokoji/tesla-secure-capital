@@ -24,6 +24,10 @@ type AuthContextValue = {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
+  /** true once the initial profile fetch has completed (success or failure) */
+  profileLoaded: boolean;
+  /** populated when the profile row could not be loaded */
+  profileError: string | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -35,14 +39,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const loadProfile = async (uid: string) => {
-    const [{ data: prof }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile(prof as Profile | null);
-    setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+    try {
+      const [{ data: prof, error: profErr }, { data: roles, error: roleErr }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", uid),
+      ]);
+      if (profErr) throw profErr;
+      if (roleErr) console.error("[auth] failed to load roles:", roleErr.message);
+      if (!prof) {
+        console.error("[auth] no profile row found for user", uid);
+        setProfileError("Your account profile could not be found. Please contact support.");
+      } else {
+        setProfileError(null);
+      }
+      setProfile((prof as Profile | null) ?? null);
+      setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+    } catch (e: any) {
+      console.error("[auth] failed to load profile:", e?.message ?? e);
+      setProfile(null);
+      setProfileError(e?.message ?? "Failed to load your profile.");
+    } finally {
+      setProfileLoaded(true);
+    }
   };
 
   useEffect(() => {
@@ -53,11 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setProfileError(null);
+        setProfileLoaded(true);
       }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session?.user) loadProfile(data.session.user.id);
+      if (data.session?.user) {
+        loadProfile(data.session.user.id);
+      } else {
+        setProfileLoaded(true);
+      }
       setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
@@ -73,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, profile, isAdmin, loading, refreshProfile, signOut }}
+      value={{ session, user: session?.user ?? null, profile, isAdmin, loading, profileLoaded, profileError, refreshProfile, signOut }}
     >
       {children}
     </AuthContext.Provider>
