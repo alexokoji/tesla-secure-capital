@@ -120,12 +120,10 @@ function RootComponent() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ((window as any).smartsupp) return;
-
-    const _smartsupp = (_smartsupp || {}) as any;
-    _smartsupp.key = "a2ff03461dbc1454be5cb30b8a39813ee985a497";
-    (window as any)._smartsupp = _smartsupp;
-
+    const w = window as any;
+    if (w.smartsupp) return;
+    w._smartsupp = w._smartsupp || {};
+    w._smartsupp.key = "a2ff03461dbc1454be5cb30b8a39813ee985a497";
     const d = document;
     const s = d.getElementsByTagName("script")[0];
     const c = d.createElement("script");
