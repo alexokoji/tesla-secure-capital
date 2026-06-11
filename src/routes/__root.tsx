@@ -118,6 +118,24 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ((window as any).smartsupp) return;
+
+    const _smartsupp = (_smartsupp || {}) as any;
+    _smartsupp.key = "a2ff03461dbc1454be5cb30b8a39813ee985a497";
+    (window as any)._smartsupp = _smartsupp;
+
+    const d = document;
+    const s = d.getElementsByTagName("script")[0];
+    const c = d.createElement("script");
+    c.type = "text/javascript";
+    c.charset = "utf-8";
+    c.async = true;
+    c.src = "https://www.smartsuppchat.com/loader.js?";
+    s?.parentNode?.insertBefore(c, s);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
