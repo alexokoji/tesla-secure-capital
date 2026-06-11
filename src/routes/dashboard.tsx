@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell,
@@ -20,7 +21,7 @@ import {
   Wallet, ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown,
   Bell, Headphones, Link2, ShieldCheck, Crown, Activity, Zap, Trophy,
   Sparkles, Copy, Calculator, Newspaper, Bot, Languages, Repeat, ArrowLeftRight,
-  QrCode, Gift, Star,
+  QrCode, Gift, Star, Menu, LayoutDashboard, Users, LifeBuoy, FileCheck2, Upload,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
