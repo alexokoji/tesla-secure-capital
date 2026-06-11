@@ -1018,31 +1018,42 @@ function InvestDialog({ plans, balance, onDone }: { plans: any[]; balance: numbe
   const [open, setOpen] = useState(false);
   const [planId, setPlanId] = useState(plans[0]?.id ?? "");
   const [amount, setAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("Balance");
+  const [txid, setTxid] = useState("");
   const { user } = useAuth();
+  const { data: wallets } = useWallets();
 
   const plan = plans.find((p) => p.id === planId);
+  const walletKey = payMethod === "Bitcoin" ? "BTC"
+    : payMethod === "Ethereum" ? "ETH"
+    : payMethod === "USDT (TRC20)" ? "USDT_TRC20"
+    : payMethod === "USDT (ERC20)" ? "USDT_ERC20"
+    : null;
+  const walletAddr = walletKey ? wallets?.[walletKey] : undefined;
 
   const submit = async () => {
     const amt = Number(amount);
     if (!plan) return;
     if (amt < Number(plan.min_amount) || amt > Number(plan.max_amount)) return toast.error(`Amount must be between $${plan.min_amount} and $${plan.max_amount}`);
-    if (amt > balance) return toast.error("Insufficient balance — deposit first");
+    if (payMethod === "Balance" && amt > balance) return toast.error("Insufficient balance — pay directly via crypto or deposit first");
     const { error } = await supabase.from("investments").insert({
       user_id: user!.id, plan_id: planId, amount: amt,
       ends_at: new Date(Date.now() + plan.duration_days * 86400000).toISOString(),
     });
     if (error) return toast.error(error.message);
     await supabase.from("transactions").insert({
-      user_id: user!.id, type: "investment", amount: amt, status: "pending", notes: `Invest in ${plan.name}`,
+      user_id: user!.id, type: "investment", amount: amt, status: "pending",
+      method: payMethod,
+      notes: `Invest in ${plan.name}${txid ? ` | TXID: ${txid}` : ""}`,
     });
-    toast.success("Investment submitted for approval.");
-    setOpen(false); setAmount(""); onDone();
+    toast.success("Investment submitted. Activation in progress.");
+    setOpen(false); setAmount(""); setTxid(""); onDone();
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant="secondary"><TrendingUp className="h-4 w-4 mr-2" />Invest</Button></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>New Investment</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
@@ -1058,6 +1069,34 @@ function InvestDialog({ plans, balance, onDone }: { plans: any[]; balance: numbe
           </div>
           <div><Label>Amount (USD)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           {plan && <p className="text-xs text-muted-foreground">Range: ${Number(plan.min_amount).toLocaleString()} – ${Number(plan.max_amount).toLocaleString()}</p>}
+          <div>
+            <Label>Pay With</Label>
+            <Select value={payMethod} onValueChange={setPayMethod}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Balance">Account Balance</SelectItem>
+                <SelectItem value="Bitcoin">Bitcoin (direct)</SelectItem>
+                <SelectItem value="Ethereum">Ethereum (direct)</SelectItem>
+                <SelectItem value="USDT (TRC20)">USDT TRC20 (direct)</SelectItem>
+                <SelectItem value="USDT (ERC20)">USDT ERC20 (direct)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {walletKey && (
+            <div className="rounded-xl border border-[oklch(0.65_0.2_240)]/30 bg-[oklch(0.65_0.2_240)]/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Send payment to:</p>
+              {walletAddr ? (
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all text-xs bg-black/30 rounded px-2 py-1.5">{walletAddr}</code>
+                  <Button size="icon" variant="outline" onClick={() => { navigator.clipboard.writeText(walletAddr); toast.success("Copied"); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : <p className="text-xs text-amber-400">Wallet not configured yet.</p>}
+              <Label className="text-xs">Transaction ID (optional)</Label>
+              <Input value={txid} onChange={(e) => setTxid(e.target.value)} placeholder="TXID for instant verification" />
+            </div>
+          )}
           <Button onClick={submit} className="w-full">Confirm Investment</Button>
         </div>
       </DialogContent>
