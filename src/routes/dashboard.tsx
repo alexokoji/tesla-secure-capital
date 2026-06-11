@@ -133,9 +133,11 @@ function Dashboard() {
     : { name: "Silver", color: "from-slate-400 to-slate-600", icon: ShieldCheck };
 
   return (
-    <div className="relative min-h-screen floating-grid-bg">
-      <Particles />
-      <div className="relative container mx-auto px-4 py-8 space-y-6">
+    <div className="relative min-h-screen floating-grid-bg flex">
+      <DashSidebar />
+      <main className="flex-1 min-w-0 relative">
+        <Particles />
+        <div className="relative px-4 py-6 lg:py-8 space-y-6 max-w-7xl mx-auto">
         <DashHeader profile={profile} tier={tier} />
 
         <StatsGrid balance={balance} activeInvested={activeInvested} totalProfit={totalProfit}
@@ -176,7 +178,8 @@ function Dashboard() {
         </div>
 
         <TransactionsTable txs={txs ?? []} />
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
