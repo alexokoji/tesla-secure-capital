@@ -144,6 +144,7 @@ function RootComponent() {
             <Outlet />
           </main>
         </div>
+        <FloatingChatButton />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
