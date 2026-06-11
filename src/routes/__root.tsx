@@ -13,7 +13,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { FloatingChatButton } from "@/components/FloatingChatButton";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -83,11 +82,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Tesla Secure Capital — Invest in the Future" },
       { name: "description", content: "Premium Tesla-backed investment plans with daily ROI, secure deposits, and 24/7 portfolio tracking." },
-      { property: "og:title", content: "Tesla Secure Capital" },
-      { property: "og:description", content: "Premium Tesla-backed investment plans with daily ROI." },
+      { property: "og:title", content: "Tesla Secure Capital — Invest in the Future" },
+      { property: "og:description", content: "Premium Tesla-backed investment plans with daily ROI, secure deposits, and 24/7 portfolio tracking." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Tesla Secure Capital — Invest in the Future" },
+      { name: "twitter:description", content: "Premium Tesla-backed investment plans with daily ROI, secure deposits, and 24/7 portfolio tracking." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/681a979f-f453-4078-9933-9b8203cb1eeb/id-preview-81944733--683646c4-f627-472b-8465-c570537d19cc.lovable.app-1781144858767.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/681a979f-f453-4078-9933-9b8203cb1eeb/id-preview-81944733--683646c4-f627-472b-8465-c570537d19cc.lovable.app-1781144858767.png" },
     ],
     links: [
       {
@@ -119,22 +122,6 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const w = window as any;
-    if (w.smartsupp) return;
-    w._smartsupp = w._smartsupp || {};
-    w._smartsupp.key = "a2ff03461dbc1454be5cb30b8a39813ee985a497";
-    const d = document;
-    const s = d.getElementsByTagName("script")[0];
-    const c = d.createElement("script");
-    c.type = "text/javascript";
-    c.charset = "utf-8";
-    c.async = true;
-    c.src = "https://www.smartsuppchat.com/loader.js?";
-    s?.parentNode?.insertBefore(c, s);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -144,7 +131,6 @@ function RootComponent() {
             <Outlet />
           </main>
         </div>
-        <FloatingChatButton />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
