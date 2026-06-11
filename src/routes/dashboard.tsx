@@ -192,6 +192,7 @@ function DashHeader({ profile, tier }: { profile: any; tier: any }) {
     <div className="glass-card rounded-2xl p-4 sm:p-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
+          <MobileSidebarTrigger />
           <div className="relative shrink-0">
             <Avatar className="h-14 w-14 ring-2 ring-[oklch(0.72_0.2_240)]/60">
               <AvatarFallback className="bg-gradient-to-br from-[oklch(0.3_0.15_250)] to-[oklch(0.18_0.05_260)] text-white font-bold">
