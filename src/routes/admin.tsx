@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Trash2, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Tesla Secure Capital" }] }),
@@ -36,17 +37,79 @@ function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="tx">Transactions</TabsTrigger>
+          <TabsTrigger value="wallets">Wallets</TabsTrigger>
           <TabsTrigger value="kyc">KYC</TabsTrigger>
           <TabsTrigger value="notif">Notifications</TabsTrigger>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
         </TabsList>
         <TabsContent value="users"><UsersTab /></TabsContent>
         <TabsContent value="tx"><TxTab /></TabsContent>
+        <TabsContent value="wallets"><WalletsTab /></TabsContent>
         <TabsContent value="kyc"><KycTab /></TabsContent>
         <TabsContent value="notif"><NotifTab /></TabsContent>
         <TabsContent value="tickets"><TicketsTab /></TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function WalletsTab() {
+  const { data, refetch } = useQuery({
+    queryKey: ["admin-wallets"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "wallets").maybeSingle();
+      return (data?.value as Record<string, string>) ?? {};
+    },
+  });
+  const [rows, setRows] = useState<{ key: string; address: string }[]>([]);
+  const [newKey, setNewKey] = useState("");
+  const [newAddr, setNewAddr] = useState("");
+  useEffect(() => {
+    if (data) setRows(Object.entries(data).map(([key, address]) => ({ key, address })));
+  }, [data]);
+
+  const save = async () => {
+    const value: Record<string, string> = {};
+    for (const r of rows) if (r.key.trim()) value[r.key.trim()] = r.address.trim();
+    const { error } = await supabase.from("site_settings").upsert({ key: "wallets", value, updated_at: new Date().toISOString() });
+    if (error) return toast.error(error.message);
+    toast.success("Wallet addresses saved — users can now pay directly.");
+    refetch();
+  };
+
+  const add = () => {
+    if (!newKey.trim() || !newAddr.trim()) return;
+    setRows([...rows, { key: newKey.trim(), address: newAddr.trim() }]);
+    setNewKey(""); setNewAddr("");
+  };
+
+  return (
+    <Card className="p-6 mt-4 max-w-3xl space-y-4">
+      <div>
+        <h3 className="font-semibold">Payment Wallet Addresses</h3>
+        <p className="text-xs text-muted-foreground">Users see these addresses when depositing or investing. Common keys: BTC, ETH, USDT_ERC20, USDT_TRC20.</p>
+      </div>
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div key={i} className="grid grid-cols-[140px_1fr_auto] gap-2 items-center">
+            <Input value={r.key} onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, key: e.target.value } : x))} placeholder="BTC" />
+            <Input value={r.address} onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, address: e.target.value } : x))} placeholder="Wallet address" />
+            <Button size="icon" variant="outline" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border pt-3">
+        <Label className="text-xs">Add another wallet</Label>
+        <div className="grid grid-cols-[140px_1fr_auto] gap-2 mt-1">
+          <Input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="Key (e.g. SOL)" />
+          <Input value={newAddr} onChange={(e) => setNewAddr(e.target.value)} placeholder="Wallet address" />
+          <Button onClick={add} variant="outline"><Plus className="h-4 w-4" /></Button>
+        </div>
+      </div>
+      <Button onClick={save} className="w-full">Save Wallets</Button>
+    </Card>
   );
 }
 

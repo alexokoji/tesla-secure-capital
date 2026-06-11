@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell,
@@ -20,7 +21,7 @@ import {
   Wallet, ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown,
   Bell, Headphones, Link2, ShieldCheck, Crown, Activity, Zap, Trophy,
   Sparkles, Copy, Calculator, Newspaper, Bot, Languages, Repeat, ArrowLeftRight,
-  QrCode, Gift, Star,
+  QrCode, Gift, Star, Menu, LayoutDashboard, Users, LifeBuoy, FileCheck2, Upload,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -132,9 +133,11 @@ function Dashboard() {
     : { name: "Silver", color: "from-slate-400 to-slate-600", icon: ShieldCheck };
 
   return (
-    <div className="relative min-h-screen floating-grid-bg">
-      <Particles />
-      <div className="relative container mx-auto px-4 py-8 space-y-6">
+    <div className="relative min-h-screen floating-grid-bg flex">
+      <DashSidebar />
+      <main className="flex-1 min-w-0 relative">
+        <Particles />
+        <div className="relative px-4 py-6 lg:py-8 space-y-6 max-w-7xl mx-auto">
         <DashHeader profile={profile} tier={tier} />
 
         <StatsGrid balance={balance} activeInvested={activeInvested} totalProfit={totalProfit}
@@ -175,7 +178,8 @@ function Dashboard() {
         </div>
 
         <TransactionsTable txs={txs ?? []} />
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
@@ -188,6 +192,7 @@ function DashHeader({ profile, tier }: { profile: any; tier: any }) {
     <div className="glass-card rounded-2xl p-4 sm:p-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
+          <MobileSidebarTrigger />
           <div className="relative shrink-0">
             <Avatar className="h-14 w-14 ring-2 ring-[oklch(0.72_0.2_240)]/60">
               <AvatarFallback className="bg-gradient-to-br from-[oklch(0.3_0.15_250)] to-[oklch(0.18_0.05_260)] text-white font-bold">
@@ -778,34 +783,173 @@ function TransactionsTable({ txs }: { txs: any[] }) {
   );
 }
 
-function TxDialog({ type, onDone, maxAmount }: { type: "deposit" | "withdrawal"; onDone: () => void; maxAmount?: number }) {
+const SIDEBAR_LINKS = [
+  { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" as const },
+  { label: "Trading", icon: Activity, to: "/trading" as const },
+  { label: "Referrals", icon: Users, to: "/referrals" as const },
+  { label: "Notifications", icon: Bell, to: "/notifications" as const },
+  { label: "KYC", icon: FileCheck2, to: "/kyc" as const },
+  { label: "Profile", icon: ShieldCheck, to: "/profile" as const },
+  { label: "Support", icon: LifeBuoy, to: "/support" as const },
+];
+
+function SidebarBody({ onAction }: { onAction?: () => void }) {
+  return (
+    <div className="flex h-full flex-col p-4 gap-2">
+      <Link to="/dashboard" onClick={onAction} className="flex items-center gap-2 px-2 py-3 mb-2">
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-[oklch(0.55_0.22_245)] to-[oklch(0.4_0.18_260)]">
+          <Zap className="h-4 w-4 text-white" />
+        </div>
+        <span className="font-bold tesla-gradient-text">Tesla Capital</span>
+      </Link>
+
+      <SidebarAction type="deposit" onAction={onAction} />
+      <SidebarAction type="withdrawal" onAction={onAction} />
+      <SidebarInvestLauncher onAction={onAction} />
+
+      <div className="my-3 h-px bg-white/10" />
+      <p className="px-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Navigate</p>
+      {SIDEBAR_LINKS.map((l) => {
+        const I = l.icon;
+        return (
+          <Link key={l.to} to={l.to} onClick={onAction}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+            <I className="h-4 w-4" /> {l.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function SidebarAction({ type, onAction }: { type: "deposit" | "withdrawal"; onAction?: () => void }) {
+  return (
+    <TxDialog
+      type={type}
+      onDone={() => { onAction?.(); }}
+      trigger={
+        <button className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-white/5 hover:bg-white/10 transition-colors">
+          {type === "deposit"
+            ? <ArrowDownToLine className="h-4 w-4 text-emerald-400" />
+            : <ArrowUpFromLine className="h-4 w-4 text-amber-400" />}
+          <span className="capitalize">{type}</span>
+        </button>
+      }
+    />
+  );
+}
+
+function SidebarInvestLauncher({ onAction }: { onAction?: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => { onAction?.(); navigate({ to: "/dashboard", hash: "invest" }); }}
+      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-gradient-to-r from-[oklch(0.55_0.22_245)]/30 to-[oklch(0.4_0.18_260)]/20 hover:opacity-90 transition-opacity">
+      <TrendingUp className="h-4 w-4 neon-blue" /> Invest
+    </button>
+  );
+}
+
+function DashSidebar() {
+  return (
+    <aside className="hidden lg:flex w-64 shrink-0 sticky top-0 h-screen border-r border-white/10 bg-[oklch(0.14_0.02_260)]/60 backdrop-blur-xl">
+      <div className="w-full"><SidebarBody /></div>
+    </aside>
+  );
+}
+
+function MobileSidebarTrigger() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="lg:hidden -ml-1">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-72 p-0 bg-[oklch(0.14_0.02_260)]/95 backdrop-blur-xl">
+        <SidebarBody onAction={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function useWallets() {
+  return useQuery({
+    queryKey: ["site-wallets"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "wallets").maybeSingle();
+      return (data?.value as Record<string, string>) ?? {};
+    },
+  });
+}
+
+function TxDialog({ type, onDone, maxAmount, trigger }: {
+  type: "deposit" | "withdrawal"; onDone: () => void; maxAmount?: number; trigger?: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Bitcoin");
+  const [txid, setTxid] = useState("");
+  const [giftCode, setGiftCode] = useState("");
+  const [giftFile, setGiftFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
   const { user } = useAuth();
+  const { data: wallets } = useWallets();
+
+  const walletKey = method === "Bitcoin" ? "BTC"
+    : method === "Ethereum" ? "ETH"
+    : method === "USDT (ERC20)" ? "USDT_ERC20"
+    : method === "USDT (TRC20)" ? "USDT_TRC20"
+    : null;
+  const walletAddr = walletKey ? wallets?.[walletKey] : undefined;
 
   const submit = async () => {
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
     if (type === "withdrawal" && maxAmount !== undefined && amt > maxAmount) return toast.error("Insufficient balance");
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user!.id, type, amount: amt, method, status: "pending",
-    });
-    if (error) return toast.error(error.message);
-    toast.success(`${type === "deposit" ? "Deposit" : "Withdrawal"} request submitted. Awaiting admin approval.`);
-    setOpen(false); setAmount(""); onDone();
+    if (type === "deposit" && method === "Gift Card" && !giftCode.trim() && !giftFile) {
+      return toast.error("Enter the gift card code or upload a photo");
+    }
+    setBusy(true);
+    try {
+      let proofPath: string | null = null;
+      if (type === "deposit" && method === "Gift Card" && giftFile) {
+        const path = `${user!.id}/${Date.now()}-${giftFile.name}`;
+        const { error: upErr } = await supabase.storage.from("payment-proofs").upload(path, giftFile);
+        if (upErr) throw upErr;
+        proofPath = path;
+      }
+      const notes = type === "deposit"
+        ? (method === "Gift Card"
+            ? `Gift card${giftCode ? ` code: ${giftCode}` : ""}${proofPath ? ` | proof: ${proofPath}` : ""}`
+            : (txid ? `TXID: ${txid}` : null))
+        : (txid ? `Payout to: ${txid}` : null);
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user!.id, type, amount: amt, method, status: "pending", notes,
+      });
+      if (error) throw error;
+      toast.success(`${type === "deposit" ? "Deposit" : "Withdrawal"} submitted. Confirmation in progress.`);
+      setOpen(false); setAmount(""); setTxid(""); setGiftCode(""); setGiftFile(null); onDone();
+    } catch (e: any) {
+      toast.error(e.message ?? "Submission failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={type === "deposit" ? "default" : "outline"}
-          className={type === "deposit" ? "bg-gradient-to-r from-[oklch(0.55_0.22_245)] to-[oklch(0.4_0.18_260)] hover:opacity-90" : ""}>
-          {type === "deposit" ? <ArrowDownToLine className="h-4 w-4 mr-2" /> : <ArrowUpFromLine className="h-4 w-4 mr-2" />}
-          {type === "deposit" ? "Deposit" : "Withdraw"}
-        </Button>
+        {trigger ?? (
+          <Button variant={type === "deposit" ? "default" : "outline"}
+            className={type === "deposit" ? "bg-gradient-to-r from-[oklch(0.55_0.22_245)] to-[oklch(0.4_0.18_260)] hover:opacity-90" : ""}>
+            {type === "deposit" ? <ArrowDownToLine className="h-4 w-4 mr-2" /> : <ArrowUpFromLine className="h-4 w-4 mr-2" />}
+            {type === "deposit" ? "Deposit" : "Withdraw"}
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="capitalize">{type} Request</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div><Label>Amount (USD)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
@@ -814,14 +958,56 @@ function TxDialog({ type, onDone, maxAmount }: { type: "deposit" | "withdrawal";
             <Select value={method} onValueChange={setMethod}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="Bitcoin">Bitcoin</SelectItem>
-                <SelectItem value="Ethereum">Ethereum</SelectItem>
-                <SelectItem value="USDT">USDT</SelectItem>
+                <SelectItem value="Bitcoin">Bitcoin (BTC)</SelectItem>
+                <SelectItem value="Ethereum">Ethereum (ETH)</SelectItem>
+                <SelectItem value="USDT (ERC20)">USDT (ERC20)</SelectItem>
+                <SelectItem value="USDT (TRC20)">USDT (TRC20)</SelectItem>
                 <SelectItem value="Gift Card">Gift Card</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={submit} className="w-full">Submit Request</Button>
+
+          {type === "deposit" && walletKey && (
+            <div className="rounded-xl border border-[oklch(0.65_0.2_240)]/30 bg-[oklch(0.65_0.2_240)]/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Send {method} to this wallet address:</p>
+              {walletAddr ? (
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all text-xs bg-black/30 rounded px-2 py-1.5">{walletAddr}</code>
+                  <Button size="icon" variant="outline" onClick={() => { navigator.clipboard.writeText(walletAddr); toast.success("Address copied"); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : <p className="text-xs text-amber-400">Wallet not yet configured. Contact support.</p>}
+              <Label className="text-xs">Transaction ID / Hash (optional)</Label>
+              <Input value={txid} onChange={(e) => setTxid(e.target.value)} placeholder="Paste your TXID for instant verification" />
+            </div>
+          )}
+
+          {type === "deposit" && method === "Gift Card" && (
+            <div className="rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Enter the gift card code, upload a photo of the card, or both.</p>
+              <Label className="text-xs">Gift Card Code</Label>
+              <Input value={giftCode} onChange={(e) => setGiftCode(e.target.value)} placeholder="XXXX-XXXX-XXXX-XXXX" />
+              <Label className="text-xs">Upload Photo</Label>
+              <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 p-3 cursor-pointer hover:bg-white/5">
+                <Upload className="h-4 w-4" />
+                <span className="text-xs">{giftFile ? giftFile.name : "Click to upload gift card image"}</span>
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={(e) => setGiftFile(e.target.files?.[0] ?? null)} />
+              </label>
+            </div>
+          )}
+
+          {type === "withdrawal" && (
+            <div>
+              <Label>Payout Address / Account</Label>
+              <Input value={txid} onChange={(e) => setTxid(e.target.value)} placeholder="Your wallet address or account details" />
+            </div>
+          )}
+
+          <Button onClick={submit} disabled={busy} className="w-full">
+            {busy ? "Submitting…" : "Submit Request"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -832,31 +1018,42 @@ function InvestDialog({ plans, balance, onDone }: { plans: any[]; balance: numbe
   const [open, setOpen] = useState(false);
   const [planId, setPlanId] = useState(plans[0]?.id ?? "");
   const [amount, setAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("Balance");
+  const [txid, setTxid] = useState("");
   const { user } = useAuth();
+  const { data: wallets } = useWallets();
 
   const plan = plans.find((p) => p.id === planId);
+  const walletKey = payMethod === "Bitcoin" ? "BTC"
+    : payMethod === "Ethereum" ? "ETH"
+    : payMethod === "USDT (TRC20)" ? "USDT_TRC20"
+    : payMethod === "USDT (ERC20)" ? "USDT_ERC20"
+    : null;
+  const walletAddr = walletKey ? wallets?.[walletKey] : undefined;
 
   const submit = async () => {
     const amt = Number(amount);
     if (!plan) return;
     if (amt < Number(plan.min_amount) || amt > Number(plan.max_amount)) return toast.error(`Amount must be between $${plan.min_amount} and $${plan.max_amount}`);
-    if (amt > balance) return toast.error("Insufficient balance — deposit first");
+    if (payMethod === "Balance" && amt > balance) return toast.error("Insufficient balance — pay directly via crypto or deposit first");
     const { error } = await supabase.from("investments").insert({
       user_id: user!.id, plan_id: planId, amount: amt,
       ends_at: new Date(Date.now() + plan.duration_days * 86400000).toISOString(),
     });
     if (error) return toast.error(error.message);
     await supabase.from("transactions").insert({
-      user_id: user!.id, type: "investment", amount: amt, status: "pending", notes: `Invest in ${plan.name}`,
+      user_id: user!.id, type: "investment", amount: amt, status: "pending",
+      method: payMethod,
+      notes: `Invest in ${plan.name}${txid ? ` | TXID: ${txid}` : ""}`,
     });
-    toast.success("Investment submitted for approval.");
-    setOpen(false); setAmount(""); onDone();
+    toast.success("Investment submitted. Activation in progress.");
+    setOpen(false); setAmount(""); setTxid(""); onDone();
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant="secondary"><TrendingUp className="h-4 w-4 mr-2" />Invest</Button></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>New Investment</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
@@ -872,6 +1069,34 @@ function InvestDialog({ plans, balance, onDone }: { plans: any[]; balance: numbe
           </div>
           <div><Label>Amount (USD)</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           {plan && <p className="text-xs text-muted-foreground">Range: ${Number(plan.min_amount).toLocaleString()} – ${Number(plan.max_amount).toLocaleString()}</p>}
+          <div>
+            <Label>Pay With</Label>
+            <Select value={payMethod} onValueChange={setPayMethod}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Balance">Account Balance</SelectItem>
+                <SelectItem value="Bitcoin">Bitcoin (direct)</SelectItem>
+                <SelectItem value="Ethereum">Ethereum (direct)</SelectItem>
+                <SelectItem value="USDT (TRC20)">USDT TRC20 (direct)</SelectItem>
+                <SelectItem value="USDT (ERC20)">USDT ERC20 (direct)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {walletKey && (
+            <div className="rounded-xl border border-[oklch(0.65_0.2_240)]/30 bg-[oklch(0.65_0.2_240)]/5 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">Send payment to:</p>
+              {walletAddr ? (
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all text-xs bg-black/30 rounded px-2 py-1.5">{walletAddr}</code>
+                  <Button size="icon" variant="outline" onClick={() => { navigator.clipboard.writeText(walletAddr); toast.success("Copied"); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : <p className="text-xs text-amber-400">Wallet not configured yet.</p>}
+              <Label className="text-xs">Transaction ID (optional)</Label>
+              <Input value={txid} onChange={(e) => setTxid(e.target.value)} placeholder="TXID for instant verification" />
+            </div>
+          )}
           <Button onClick={submit} className="w-full">Confirm Investment</Button>
         </div>
       </DialogContent>
