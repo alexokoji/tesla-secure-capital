@@ -441,33 +441,3 @@ function FinancialNews() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-2xl md:text-3xl font-bold text-primary">{value}</div>
-      <div className="text-xs text-muted-foreground mt-1">{label}</div>
-    </div>
-  );
-}
-
-function Feature({ icon: Icon, title, desc }: { icon: typeof Shield; title: string; desc: string }) {
-  return (
-    <Card className="p-6">
-      <Icon className="h-8 w-8 text-primary mb-3" />
-      <h3 className="font-semibold text-lg">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-2">{desc}</p>
-    </Card>
-  );
-}
-
-function StatCard({ icon: Icon, label, value }: { icon: typeof Shield; label: string; value: string }) {
-  return (
-    <Card className="p-5 backdrop-blur-sm">
-      <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <div className="mt-2 text-2xl font-bold">{value}</div>
-    </Card>
-  );
-}
