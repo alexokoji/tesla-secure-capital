@@ -817,7 +817,7 @@ function TxDialog({ type, onDone, maxAmount }: { type: "deposit" | "withdrawal";
                 <SelectItem value="Bitcoin">Bitcoin</SelectItem>
                 <SelectItem value="Ethereum">Ethereum</SelectItem>
                 <SelectItem value="USDT">USDT</SelectItem>
-                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                <SelectItem value="Gift Card">Gift Card</SelectItem>
               </SelectContent>
             </Select>
           </div>
