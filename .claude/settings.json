@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -nE \"^  return|^  \\\\\\);|^}|<Footer|</div>\\\\s*$|function Index|function Footer\" src/routes/index.tsx)",
+      "Bash(grep -nE \"function Index|^}$|</div>\\\\s*$|^  \\\\\\);\" src/routes/index.tsx)",
+      "Bash(awk -F: '$1>58 && $1<190')"
+    ]
+  }
+}

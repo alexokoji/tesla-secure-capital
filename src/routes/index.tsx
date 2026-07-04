@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TradingViewWidget } from "@/components/TradingViewWidget";
 import { TickerTape } from "@/components/TickerTape";
+import { LiveActivityToasts } from "@/components/LiveActivityToasts";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +58,7 @@ function Index() {
 
   return (
     <div className="bg-background text-foreground">
+      <LiveActivityToasts />
       <HeroCarousel stats={stats} />
 
       <div className="border-y border-primary/20 bg-black/40 backdrop-blur"><TickerTape /></div>
