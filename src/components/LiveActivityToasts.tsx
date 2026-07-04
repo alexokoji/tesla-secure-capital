@@ -29,6 +29,14 @@ const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", curren
 
 type Kind = "invest" | "profit" | "withdraw";
 
+// Shared options: bottom-left + compact, so these never cover the header and
+// stay visually distinct from the app's real (top-right) toasts.
+const baseOpts = {
+  position: "bottom-left" as const,
+  duration: 4500,
+  className: "live-activity-toast",
+};
+
 function fireOne() {
   const name = NAMES[Math.floor(Math.random() * NAMES.length)];
   const email = hashedEmail(name);
@@ -39,21 +47,21 @@ function fireOne() {
   if (kind === "invest") {
     const plan = PLANS[Math.floor(Math.random() * PLANS.length)];
     toast.success(`${email} just invested`, {
+      ...baseOpts,
       description: `${usd(amount)} in the ${plan} plan`,
-      icon: <TrendingUp className="h-4 w-4" />,
-      duration: 5000,
+      icon: <TrendingUp className="h-3.5 w-3.5" />,
     });
   } else if (kind === "profit") {
     toast.success(`${email} earned profit`, {
+      ...baseOpts,
       description: `+${usd(Math.round(amount * 0.12))} daily ROI credited`,
-      icon: <Sparkles className="h-4 w-4" />,
-      duration: 5000,
+      icon: <Sparkles className="h-3.5 w-3.5" />,
     });
   } else {
     toast(`${email} withdrew`, {
+      ...baseOpts,
       description: `${usd(amount)} paid out successfully`,
-      icon: <ArrowDownToLine className="h-4 w-4" />,
-      duration: 5000,
+      icon: <ArrowDownToLine className="h-3.5 w-3.5" />,
     });
   }
 }

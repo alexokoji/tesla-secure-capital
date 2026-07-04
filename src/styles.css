@@ -267,3 +267,22 @@
     radial-gradient(ellipse at 80% 80%, oklch(0.55 0.2 260 / 0.18), transparent 55%),
     var(--hero-base);
 }
+
+/* Compact simulated live-activity toasts (bottom-left) */
+.live-activity-toast {
+  width: 270px;
+  padding: 8px 12px !important;
+  gap: 8px !important;
+}
+.live-activity-toast [data-title] {
+  font-size: 12px;
+  line-height: 1.2;
+}
+.live-activity-toast [data-description] {
+  font-size: 11px;
+  line-height: 1.2;
+}
+.live-activity-toast [data-icon] {
+  width: 14px;
+  height: 14px;
+}
