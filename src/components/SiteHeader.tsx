@@ -1,9 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
-import { Zap, Bell } from "lucide-react";
+import { Zap, Bell, Sun, Moon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  return (
+    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" title="Toggle theme">
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </Button>
+  );
+}
 
 export function SiteHeader() {
   const { user, isAdmin, signOut } = useAuth();
@@ -34,6 +44,7 @@ export function SiteHeader() {
           {isAdmin && <Link to="/admin" className="hover:text-foreground transition-colors">Admin</Link>}
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <>
               <Link to="/notifications" className="relative p-2 rounded-md hover:bg-accent">

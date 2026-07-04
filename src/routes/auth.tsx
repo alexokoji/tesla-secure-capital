@@ -143,7 +143,7 @@ function AuthPage() {
     const username = String(fd.get("username") || "").trim();
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: String(fd.get("email")),
       password: pw,
       options: {
@@ -159,8 +159,16 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("🎉 Welcome to Tesla Secure Capital!");
-    navigate({ to: "/dashboard" });
+
+    if (data.session) {
+      // Email confirmation is disabled — the user is already signed in.
+      toast.success("🎉 Welcome to Tesla Secure Capital!");
+      navigate({ to: "/dashboard" });
+    } else {
+      // Email confirmation is required — no session yet. Point them to their inbox.
+      toast.success("Account created! Check your email to confirm, then sign in.");
+      setTab("login");
+    }
   };
 
   return (
