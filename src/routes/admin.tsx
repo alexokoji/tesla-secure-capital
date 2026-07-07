@@ -40,6 +40,7 @@ function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="tx">Transactions</TabsTrigger>
+          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
           <TabsTrigger value="wallets">Wallets</TabsTrigger>
           <TabsTrigger value="kyc">KYC</TabsTrigger>
           <TabsTrigger value="notif">Notifications</TabsTrigger>
@@ -47,6 +48,7 @@ function AdminPage() {
         </TabsList>
         <TabsContent value="users"><UsersTab /></TabsContent>
         <TabsContent value="tx"><TxTab /></TabsContent>
+        <TabsContent value="withdrawals"><WithdrawalCodesTab /></TabsContent>
         <TabsContent value="wallets"><WalletsTab /></TabsContent>
         <TabsContent value="kyc"><KycTab /></TabsContent>
         <TabsContent value="notif"><NotifTab /></TabsContent>
@@ -77,6 +79,79 @@ function RoiControls() {
         Force +1 day (test)
       </Button>
     </div>
+  );
+}
+
+function WithdrawalCodesTab() {
+  const { data: reqs, refetch, isFetching } = useQuery({
+    queryKey: ["admin-wd-codes"],
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("admin_list_withdrawal_requests");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const issue = async (userId: string, rowId: string) => {
+    setBusyId(rowId);
+    const { data, error } = await (supabase.rpc as any)("admin_issue_withdrawal_code", { p_user_id: userId });
+    setBusyId(null);
+    if (error) return toast.error(error.message);
+    toast.success(`Code ${data} generated and sent to the user.`);
+    refetch();
+  };
+
+  return (
+    <Card className="p-6 mt-4">
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <div>
+          <h3 className="font-semibold">Withdrawal Code Requests</h3>
+          <p className="text-xs text-muted-foreground">
+            Generate a verification code for users who requested one. It's delivered to their notifications and stays valid until they use it for a withdrawal.
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+        </Button>
+      </div>
+      {!reqs?.length ? (
+        <p className="text-sm text-muted-foreground">No withdrawal code requests yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-muted-foreground border-b border-border">
+              <tr><th className="py-2">User</th><th>Requested</th><th>Status</th><th>Code</th><th></th></tr>
+            </thead>
+            <tbody>
+              {reqs.map((r: any) => (
+                <tr key={r.id} className="border-b border-border/40">
+                  <td className="py-2">
+                    <div className="font-medium">{r.full_name || "—"}</div>
+                    <div className="text-xs text-muted-foreground">{r.email}</div>
+                  </td>
+                  <td className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                  <td>
+                    <Badge variant={r.status === "requested" ? "secondary" : r.status === "issued" ? "default" : "outline"}>
+                      {r.status}
+                    </Badge>
+                  </td>
+                  <td className="font-mono tracking-widest">{r.code ?? "—"}</td>
+                  <td>
+                    {r.status !== "used" && (
+                      <Button size="sm" onClick={() => issue(r.user_id, r.id)} disabled={busyId === r.id}>
+                        {busyId === r.id ? "Generating…" : r.status === "issued" ? "Regenerate" : "Generate Code"}
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }
 

@@ -959,12 +959,15 @@ function TxDialog({ type, onDone, maxAmount, trigger }: {
   const { user } = useAuth();
   const { data: wallets } = useWallets();
 
+  const [codeRequested, setCodeRequested] = useState(false);
+
   const requestCode = async () => {
     setSendingCode(true);
     const { error } = await (supabase as any).rpc("request_withdrawal_code");
     setSendingCode(false);
-    if (error) return toast.error(error.message ?? "Could not send code");
-    toast.success("Verification code sent — check your notifications 🔔");
+    if (error) return toast.error(error.message ?? "Could not submit request");
+    setCodeRequested(true);
+    toast.success("Request received. Contact support to get your withdrawal code.");
   };
 
   const walletKey = method === "Bitcoin" ? "BTC"
@@ -982,9 +985,9 @@ function TxDialog({ type, onDone, maxAmount, trigger }: {
       return toast.error("Enter the gift card code or upload a photo");
     }
     if (type === "withdrawal") {
-      if (!wcode.trim()) return toast.error("Request and enter your withdrawal code");
+      if (!wcode.trim()) return toast.error("Enter the withdrawal code provided by support");
       const { data: ok, error: vErr } = await (supabase as any).rpc("verify_withdrawal_code", { p_code: wcode.trim() });
-      if (vErr || !ok) return toast.error("Invalid or expired withdrawal code");
+      if (vErr || !ok) return toast.error("Invalid withdrawal code");
     }
     setBusy(true);
     try {
@@ -1005,7 +1008,7 @@ function TxDialog({ type, onDone, maxAmount, trigger }: {
       });
       if (error) throw error;
       toast.success(`${type === "deposit" ? "Deposit" : "Withdrawal"} submitted. Confirmation in progress.`);
-      setOpen(false); setAmount(""); setTxid(""); setGiftCode(""); setGiftFile(null); setWcode(""); onDone();
+      setOpen(false); setAmount(""); setTxid(""); setGiftCode(""); setGiftFile(null); setWcode(""); setCodeRequested(false); onDone();
     } catch (e: any) {
       toast.error(e.message ?? "Submission failed");
     } finally {
@@ -1082,15 +1085,21 @@ function TxDialog({ type, onDone, maxAmount, trigger }: {
               <div className="rounded-xl border border-[oklch(0.65_0.2_240)]/30 bg-[oklch(0.65_0.2_240)]/5 p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Withdrawal Verification Code</Label>
-                  <Button type="button" size="sm" variant="outline" onClick={requestCode} disabled={sendingCode}>
-                    {sendingCode ? "Sending…" : "Request Code"}
+                  <Button type="button" size="sm" variant="outline" onClick={requestCode} disabled={sendingCode || codeRequested}>
+                    {sendingCode ? "Requesting…" : codeRequested ? "Requested ✓" : "Request Code"}
                   </Button>
                 </div>
                 <Input value={wcode} onChange={(e) => setWcode(e.target.value)} inputMode="numeric" maxLength={6}
-                  placeholder="Enter the 6-digit code" />
-                <p className="text-[11px] text-muted-foreground">
-                  A verification code will be sent to your notifications. Enter it to confirm your withdrawal.
-                </p>
+                  placeholder="Enter the code from support" />
+                {codeRequested ? (
+                  <p className="text-[11px] text-amber-400">
+                    Your request has been received. <Link to="/support" className="underline">Contact Support</Link> to get your withdrawal code, then enter it above.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    Click <span className="font-medium">Request Code</span>, then contact support to receive your withdrawal code. It won't expire until used.
+                  </p>
+                )}
               </div>
             </>
           )}
